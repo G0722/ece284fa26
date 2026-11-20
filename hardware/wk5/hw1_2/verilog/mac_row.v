@@ -14,20 +14,24 @@ module mac_row (clk, out_s, in_w, in_n, valid, inst_w, reset);
   input  [psum_bw*col-1:0] in_n;
 
   wire  [(col+1)*bw-1:0] temp;
+  wire [2*(col+1)-1:0] inst_temp;
 
   assign temp[bw-1:0]   = in_w;
+  assign inst_temp[1:0] = inst_w;
 
   genvar i;
   for (i=1; i < col+1 ; i=i+1) begin : col_num
       mac_tile #(.bw(bw), .psum_bw(psum_bw)) mac_tile_instance (
-         .clk(clk),
-         .reset(reset),
-	 .in_w( temp[bw*i-1:bw*(i-1)]),
-	 .out_e(temp[bw*(i+1)-1:bw*i]),
-	 .inst_w(...),
-	 .inst_e(...),
-	 .in_n(...),
-	 .out_s(...));
+        .clk(clk),
+        .reset(reset),
+        .in_w( temp[bw*i-1:bw*(i-1)]),
+        .out_e(temp[bw*(i+1)-1:bw*i]),
+        .inst_w(inst_temp[2*i-1:2*(i-1)]),
+        .inst_e(inst_temp[2*(i+1)-1:2*i]),
+        .in_n(in_n[i*psum_bw-1:(i-1)*psum_bw]),
+        .out_s(out_s[i*psum_bw-1:(i-1)*psum_bw]));
+      
+      assign valid[i-1] = inst_temp[2*i+1];
   end
 
 endmodule
